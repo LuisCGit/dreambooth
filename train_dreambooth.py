@@ -553,8 +553,8 @@ def main(args):
     )
 
     noise_scheduler = DDPMScheduler.from_config(args.pretrained_model_name_or_path, subfolder="scheduler")
-    print("concepts_list: ", concepts_list)
-    print("with_prior_preservation: ", with_prior_preservation)
+    print("concepts_list: ", args.concepts_list)
+    print("with_prior_preservation: ", args.with_prior_preservation)
     train_dataset = DreamBoothDataset(
         concepts_list=args.concepts_list,
         tokenizer=tokenizer,
