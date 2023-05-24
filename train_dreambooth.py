@@ -745,40 +745,42 @@ def main(args):
                     else:
                         latent_dist = vae.encode(batch["pixel_values"].to(dtype=weight_dtype)).latent_dist
                     #------ added -----
-                    if epoch % 5 == 0:
-                        print("anotha couple epochs")
-                        print("newest3")
-                        sd_pipeline = StableDiffusionPipeline.from_pretrained(
-                            args.pretrained_model_name_or_path,
-                            unet=unet,
-                            text_encoder=text_encoder,
-                            # vae=vae,
-                            safety_checker=None,
-                            scheduler=DDIMScheduler(beta_start=0.00085, beta_end=0.012, beta_schedule="scaled_linear", clip_sample=False, set_alpha_to_one=False),
-                            torch_dtype=torch.float16,
-                            revision=args.revision,
-                        ).to("cuda")
-                        print("pipeline constructed")
-                        prompts = [
-                            "a photo of an astronaut riding a horse on mars",
-                            "A high tech solarpunk utopia in the Amazon rainforest",
-                            "A pikachu fine dining with a view to the Eiffel Tower",
-                            "A mecha robot in a favela in expressionist style",
-                            "an insect robot preparing a delicious meal",
-                            "A small cabin on top of a snowy mountain in the style of Disney, artstation",
-                        ]
-                        with torch.autocast("cuda"), torch.inference_mode():
-                            images = sd_pipeline(prompts, num_images_per_prompt=1, output_type="numpy").images
-                            print("images generated")
-                        clip_score_fn = partial(clip_score, model_name_or_path="openai/clip-vit-base-patch16")
-                        def calculate_clip_score(images, prompts):
-                            images_int = (images * 255).astype("uint8")
-                            clip_score = clip_score_fn(torch.from_numpy(images_int).permute(0, 3, 1, 2), prompts).detach()
-                            return round(float(clip_score), 4)
+                    metrics = False
+                    if metrics:
+                        if epoch % 5 == 0:
+                            print("anotha couple epochs")
+                            print("newest3")
+                            sd_pipeline = StableDiffusionPipeline.from_pretrained(
+                                args.pretrained_model_name_or_path,
+                                unet=unet,
+                                text_encoder=text_encoder,
+                                # vae=vae,
+                                safety_checker=None,
+                                scheduler=DDIMScheduler(beta_start=0.00085, beta_end=0.012, beta_schedule="scaled_linear", clip_sample=False, set_alpha_to_one=False),
+                                torch_dtype=torch.float16,
+                                revision=args.revision,
+                            ).to("cuda")
+                            print("pipeline constructed")
+                            prompts = [
+                                "a photo of an astronaut riding a horse on mars",
+                                "A high tech solarpunk utopia in the Amazon rainforest",
+                                "A pikachu fine dining with a view to the Eiffel Tower",
+                                "A mecha robot in a favela in expressionist style",
+                                "an insect robot preparing a delicious meal",
+                                "A small cabin on top of a snowy mountain in the style of Disney, artstation",
+                            ]
+                            with torch.autocast("cuda"), torch.inference_mode():
+                                images = sd_pipeline(prompts, num_images_per_prompt=1, output_type="numpy").images
+                                print("images generated")
+                            clip_score_fn = partial(clip_score, model_name_or_path="openai/clip-vit-base-patch16")
+                            def calculate_clip_score(images, prompts):
+                                images_int = (images * 255).astype("uint8")
+                                clip_score = clip_score_fn(torch.from_numpy(images_int).permute(0, 3, 1, 2), prompts).detach()
+                                return round(float(clip_score), 4)
 
 
-                        sd_clip_score = calculate_clip_score(images, prompts)
-                        print(f"CLIP score: {sd_clip_score}")
+                            sd_clip_score = calculate_clip_score(images, prompts)
+                            print(f"CLIP score: {sd_clip_score}")
                     #------ added -----
                     latents = latent_dist.sample() * 0.18215
 
