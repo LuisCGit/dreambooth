@@ -553,8 +553,7 @@ def main(args):
     )
 
     noise_scheduler = DDPMScheduler.from_config(args.pretrained_model_name_or_path, subfolder="scheduler")
-    print("concepts_list: ", args.concepts_list)
-    print("with_prior_preservation: ", args.with_prior_preservation)
+
     train_dataset = DreamBoothDataset(
         concepts_list=args.concepts_list,
         tokenizer=tokenizer,
@@ -796,6 +795,21 @@ def main(args):
                 lr_scheduler.step()
                 optimizer.zero_grad(set_to_none=True)
                 loss_avg.update(loss.detach_(), bsz)
+
+                if epoch % 20 == 0:
+                    print("anotha couple epochs")
+                    with torch.no_grad():
+                        sd_pipeline = StableDiffusionPipeline.from_pretrained(
+                            args.pretrained_model_name_or_path,
+                            unet=unet,
+                            text_encoder=text_encoder,
+                            vae=vae,
+                            safety_checker=None,
+                            scheduler=lr_scheduler,
+                            torch_dtype=torch.float16,
+                            revision=args.revision,
+                        )
+                        print("pipeline constructed")
 
             if not global_step % args.log_interval:
                 logs = {"loss": loss_avg.avg.item(), "lr": lr_scheduler.get_last_lr()[0]}
