@@ -748,7 +748,7 @@ def main(args):
                             args.pretrained_model_name_or_path,
                             unet=unet,
                             text_encoder=text_encoder,
-                            vae=vae,
+                            # vae=vae,
                             safety_checker=None,
                             scheduler=lr_scheduler,
                             torch_dtype=torch.float16,
