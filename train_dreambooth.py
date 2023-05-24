@@ -750,7 +750,7 @@ def main(args):
                             text_encoder=text_encoder,
                             # vae=vae,
                             safety_checker=None,
-                            scheduler=lr_scheduler,
+                            scheduler=DDIMScheduler(beta_start=0.00085, beta_end=0.012, beta_schedule="scaled_linear", clip_sample=False, set_alpha_to_one=False),
                             torch_dtype=torch.float16,
                             revision=args.revision,
                         )
