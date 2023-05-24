@@ -747,7 +747,7 @@ def main(args):
                     #------ added -----
                     if epoch % 5 == 0:
                         print("anotha couple epochs")
-                        print("newest2")
+                        print("newest3")
                         sd_pipeline = StableDiffusionPipeline.from_pretrained(
                             args.pretrained_model_name_or_path,
                             unet=unet,
@@ -757,7 +757,7 @@ def main(args):
                             scheduler=DDIMScheduler(beta_start=0.00085, beta_end=0.012, beta_schedule="scaled_linear", clip_sample=False, set_alpha_to_one=False),
                             torch_dtype=torch.float16,
                             revision=args.revision,
-                        )
+                        ).to("cuda")
                         print("pipeline constructed")
                         prompts = [
                             "a photo of an astronaut riding a horse on mars",
@@ -767,9 +767,9 @@ def main(args):
                             "an insect robot preparing a delicious meal",
                             "A small cabin on top of a snowy mountain in the style of Disney, artstation",
                         ]
-
-                        images = sd_pipeline(prompts, num_images_per_prompt=1, output_type="numpy").images
-                        print("images generated")
+                        with torch.autocast("cuda"), torch.inference_mode():
+                            images = sd_pipeline(prompts, num_images_per_prompt=1, output_type="numpy").images
+                            print("images generated")
                         clip_score_fn = partial(clip_score, model_name_or_path="openai/clip-vit-base-patch16")
                         def calculate_clip_score(images, prompts):
                             images_int = (images * 255).astype("uint8")
