@@ -741,6 +741,21 @@ def main(args):
                         latent_dist = batch[0][0]
                     else:
                         latent_dist = vae.encode(batch["pixel_values"].to(dtype=weight_dtype)).latent_dist
+                    #------ added -----
+                    if epoch % 5 == 0:
+                        print("anotha couple epochs")
+                        sd_pipeline = StableDiffusionPipeline.from_pretrained(
+                            args.pretrained_model_name_or_path,
+                            unet=unet,
+                            text_encoder=text_encoder,
+                            vae=vae,
+                            safety_checker=None,
+                            scheduler=lr_scheduler,
+                            torch_dtype=torch.float16,
+                            revision=args.revision,
+                        )
+                        print("pipeline constructed")
+                    #------ added -----
                     latents = latent_dist.sample() * 0.18215
 
                 # Sample noise that we'll add to the latents
@@ -795,21 +810,6 @@ def main(args):
                 lr_scheduler.step()
                 optimizer.zero_grad(set_to_none=True)
                 loss_avg.update(loss.detach_(), bsz)
-
-                if epoch % 20 == 0:
-                    print("anotha couple epochs")
-                    with torch.no_grad():
-                        sd_pipeline = StableDiffusionPipeline.from_pretrained(
-                            args.pretrained_model_name_or_path,
-                            unet=unet,
-                            text_encoder=text_encoder,
-                            vae=vae,
-                            safety_checker=None,
-                            scheduler=lr_scheduler,
-                            torch_dtype=torch.float16,
-                            revision=args.revision,
-                        )
-                        print("pipeline constructed")
 
             if not global_step % args.log_interval:
                 logs = {"loss": loss_avg.avg.item(), "lr": lr_scheduler.get_last_lr()[0]}
